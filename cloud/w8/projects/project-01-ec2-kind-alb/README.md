@@ -55,10 +55,11 @@ Hai stack duoc tach rieng vi Kubernetes API chi san sang sau khi EC2 bootstrap x
 project-01-ec2-kind-alb/
   scripts/
     deploy.ps1
+    deploy.sh
     destroy.ps1
+    destroy.sh
   terraform/
     infra/
-      versions.tf
       providers.tf
       variables.tf
       network.tf
@@ -70,12 +71,11 @@ project-01-ec2-kind-alb/
       user-data.sh.tftpl
       terraform.tfvars.example
     workloads/
-      versions.tf
       providers.tf
       variables.tf
-      namespace.tf
       config.tf
       deployment.tf
+      namespace.tf
       service.tf
       outputs.tf
       terraform.tfvars.example
@@ -87,17 +87,32 @@ Generated files nhu state, private key, kubeconfig, `.terraform/`, `terraform.tf
 
 Tu thu muc project:
 
+Windows PowerShell:
+
 ```powershell
 Copy-Item terraform\infra\terraform.tfvars.example terraform\infra\terraform.tfvars
 Copy-Item terraform\workloads\terraform.tfvars.example terraform\workloads\terraform.tfvars
 ```
 
-Sua `terraform/infra/terraform.tfvars`:
+macOS/Linux:
 
-Lay public IP hien tai cua may local:
+```bash
+cp terraform/infra/terraform.tfvars.example terraform/infra/terraform.tfvars
+cp terraform/workloads/terraform.tfvars.example terraform/workloads/terraform.tfvars
+```
+
+Lay public IP hien tai cua may local.
+
+Windows PowerShell:
 
 ```powershell
 "$((Invoke-RestMethod https://checkip.amazonaws.com).Trim())/32"
+```
+
+macOS/Linux:
+
+```bash
+echo "$(curl -s https://checkip.amazonaws.com | tr -d '\n')/32"
 ```
 
 Copy ket qua vao `admin_cidr`, vi du:
@@ -106,16 +121,49 @@ Copy ket qua vao `admin_cidr`, vi du:
 admin_cidr = "203.0.113.10/32"
 ```
 
-Deploy:
+Deploy tren Windows PowerShell:
 
 ```powershell
 .\scripts\deploy.ps1
 ```
 
-Destroy:
+Deploy tren macOS/Linux:
+
+```bash
+chmod +x scripts/deploy.sh scripts/destroy.sh
+./scripts/deploy.sh
+```
+
+Bo qua prompt `yes` khi da chac chan plan:
+
+```powershell
+.\scripts\deploy.ps1 -AutoApprove
+```
+
+```bash
+./scripts/deploy.sh --auto-approve
+```
+
+Destroy tren Windows PowerShell:
 
 ```powershell
 .\scripts\destroy.ps1
+```
+
+Destroy tren macOS/Linux:
+
+```bash
+./scripts/destroy.sh
+```
+
+Destroy khong hoi `yes`:
+
+```powershell
+.\scripts\destroy.ps1 -AutoApprove
+```
+
+```bash
+./scripts/destroy.sh --auto-approve
 ```
 
 ## Evidence
