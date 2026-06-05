@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+exec > >(tee -a /var/log/demo-kind-bootstrap.log) 2>&1
+
+dnf update -y
+dnf install -y docker tar gzip
+command -v curl
+systemctl enable --now docker
+usermod -aG docker ec2-user
+
+curl -fsSL -o /usr/local/bin/kind "https://kind.sigs.k8s.io/dl/${kind_version}/kind-linux-amd64"
+chmod +x /usr/local/bin/kind
+
+curl -fsSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${kubectl_version}/bin/linux/amd64/kubectl"
+chmod +x /usr/local/bin/kubectl
+
+TOKEN=$(curl -fsSL -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+PUBLIC_IP=$(curl -fsSL -H "X-aws-ec2-metadata-token: $${TOKEN}" "http://169.254.169.254/latest/meta-data/public-ipv4")
+PRIVATE_IP=$(curl -fsSL -H "X-aws-ec2-metadata-token: $${TOKEN}" "http://169.254.169.254/latest/meta-data/local-ipv4")
+
+mkdir -p /opt/demo-kind
+
+cat > /opt/demo-kind/kind-config.yaml <<EOF
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  apiServerAddress: "0.0.0.0"
+  apiServerPort: 6443
+nodes:
+  - role: control-plane
+    image: ${kind_node_image}
+    extraPortMappings:
+      - containerPort: ${node_port}
+        hostPort: ${node_port}
+        protocol: TCP
+  - role: worker
+    image: ${kind_node_image}
+  - role: worker
+    image: ${kind_node_image}
+kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      certSANs:
+        - "$${PUBLIC_IP}"
+        - "$${PRIVATE_IP}"
+EOF
+
+if ! kind get clusters | grep -qx "${cluster_name}"; then
+  kind create cluster --name "${cluster_name}" --config /opt/demo-kind/kind-config.yaml
+fi
+
+kind get kubeconfig --name "${cluster_name}" > /opt/demo-kind/kubeconfig-raw
+sed -E "s#https://(127.0.0.1|0.0.0.0):[0-9]+#https://$${PRIVATE_IP}:6443#g" /opt/demo-kind/kubeconfig-raw > /opt/demo-kind/kubeconfig-ec2
+kubectl --kubeconfig /opt/demo-kind/kubeconfig-ec2 get nodes
+
+sed -E "s#https://(127.0.0.1|0.0.0.0):[0-9]+#https://$${PUBLIC_IP}:6443#g" /opt/demo-kind/kubeconfig-raw > /opt/demo-kind/kubeconfig
+chmod 600 /opt/demo-kind/kubeconfig
+chmod 600 /opt/demo-kind/kubeconfig-ec2
+
+cat > /var/lib/demo-kind-ready <<EOF
+kind cluster ${cluster_name} is ready
+public_ip=$${PUBLIC_IP}
+node_port=${node_port}
+EOF

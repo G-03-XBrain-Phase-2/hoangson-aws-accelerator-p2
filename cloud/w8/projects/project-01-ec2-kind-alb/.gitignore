@@ -1,0 +1,9 @@
+generated/
+*.pem
+*.key
+kubeconfig
+*.tfplan
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars

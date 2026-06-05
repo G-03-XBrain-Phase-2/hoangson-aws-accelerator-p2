@@ -1,0 +1,7 @@
+namespace = "demo-local"
+app_name  = "demo-app"
+app_image = "nginx:1.27-alpine"
+student_name = "Nguyen Hoang Son"
+group_name   = "CD03"
+replicas     = 2
+node_port    = 30080
