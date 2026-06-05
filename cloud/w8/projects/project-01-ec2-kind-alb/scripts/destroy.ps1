@@ -1,4 +1,5 @@
 param(
+  [Alias("auto-approve")]
   [switch]$AutoApprove
 )
 

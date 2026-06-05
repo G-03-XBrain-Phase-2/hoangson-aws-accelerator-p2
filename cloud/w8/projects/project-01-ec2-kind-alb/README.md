@@ -137,7 +137,7 @@ chmod +x scripts/deploy.sh scripts/destroy.sh
 Bo qua prompt `yes` khi da chac chan plan:
 
 ```powershell
-.\scripts\deploy.ps1 -AutoApprove
+.\scripts\deploy.ps1 -auto-approve
 ```
 
 ```bash
@@ -159,7 +159,7 @@ Destroy tren macOS/Linux:
 Destroy khong hoi `yes`:
 
 ```powershell
-.\scripts\destroy.ps1 -AutoApprove
+.\scripts\destroy.ps1 -auto-approve
 ```
 
 ```bash
