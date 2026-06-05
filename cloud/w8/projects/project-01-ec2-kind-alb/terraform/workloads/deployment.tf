@@ -8,6 +8,15 @@ resource "kubernetes_deployment_v1" "app" {
   spec {
     replicas = var.replicas
 
+    strategy {
+      type = "RollingUpdate"
+
+      rolling_update {
+        max_surge       = "0"
+        max_unavailable = "1"
+      }
+    }
+
     selector {
       match_labels = local.labels
     }

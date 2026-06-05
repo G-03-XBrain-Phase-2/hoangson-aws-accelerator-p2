@@ -2,40 +2,38 @@
 
 ## Scope
 
-This document is the evidence checklist for Project 01 only.
-
-Goal:
+This evidence file proves Project 01 satisfies the assignment:
 
 - Terraform creates AWS infrastructure.
 - EC2 bootstraps a local `kind` Kubernetes cluster.
-- Terraform Kubernetes provider deploys the app.
-- AWS ALB exposes the app to the Internet.
-- Evidence proves architecture, provider wiring, workload state, and HTTP access.
+- Terraform wires the Kubernetes provider into the workflow.
+- The app is deployed as Kubernetes resources.
+- AWS ALB exposes the app publicly.
 
-Do not capture or commit:
+Do not commit secrets or runtime files:
 
-- AWS access keys.
+- AWS credentials.
 - Private key files.
 - `terraform.tfstate`.
 - `terraform.tfvars`.
 - Full kubeconfig content.
 
-## Architecture Diagram
+## Architecture
 
-### High-level system
+### End-to-end Request Flow
 
 ```mermaid
 flowchart TB
   user[User Browser]
-  alb[AWS Application Load Balancer<br/>public HTTP :80]
+  alb[AWS ALB<br/>public HTTP :80]
   tg[Target Group<br/>instance target :30080]
   ec2[EC2 t3.small<br/>Amazon Linux 2023]
   docker[Docker Engine]
-  kind[kind Cluster<br/>3 nodes]
+  kind[kind cluster<br/>1 control-plane + 2 workers]
   svc[Kubernetes Service<br/>NodePort 30080]
   deploy[Kubernetes Deployment<br/>demo-app, 2 replicas]
-  pod1[Pod demo-app<br/>nginx]
-  pod2[Pod demo-app<br/>nginx]
+  pod1[demo-app pod<br/>worker node]
+  pod2[demo-app pod<br/>worker2 node]
 
   user --> alb
   alb --> tg
@@ -48,117 +46,101 @@ flowchart TB
   deploy --> pod2
 ```
 
-### Provider wiring
+### Terraform Provider Wiring
 
 ```mermaid
 flowchart LR
   tf[Terraform CLI<br/>local machine]
 
-  subgraph InfraStack[terraform/infra]
-    awsProvider[AWS provider]
-    tlsProvider[TLS provider]
-    localProvider[Local provider]
+  subgraph Infra[terraform/infra]
+    aws[AWS provider]
+    tls[TLS provider]
+    local[Local provider]
   end
 
-  subgraph WorkloadStack[terraform/workloads]
-    k8sProvider[Kubernetes provider]
-  end
-
-  subgraph AWS[AWS]
+  subgraph AWS[AWS resources]
     vpc[VPC + public subnets]
     sg[Security groups]
     instance[EC2 kind host]
-    lb[ALB + Target Group]
+    lb[ALB + target group]
   end
 
-  subgraph K8S[Kubernetes on kind]
-    ns[Namespace demo-local]
-    cm[ConfigMap web content]
-    dep[Deployment demo-app]
-    service[Service NodePort]
+  subgraph Runtime[EC2 bootstrap]
+    userdata[user_data]
+    kubeconfig[generated/kubeconfig]
   end
 
-  tf --> awsProvider
-  tf --> tlsProvider
-  tf --> localProvider
-  awsProvider --> vpc
-  awsProvider --> sg
-  awsProvider --> instance
-  awsProvider --> lb
-  instance --> kubeconfig[generated/kubeconfig]
-  kubeconfig --> k8sProvider
-  k8sProvider --> ns
-  k8sProvider --> cm
-  k8sProvider --> dep
-  k8sProvider --> service
+  subgraph Workloads[terraform/workloads]
+    k8s[Kubernetes provider]
+    ns[Namespace]
+    cm[ConfigMap]
+    dep[Deployment]
+    service[NodePort Service]
+  end
+
+  tf --> aws
+  tf --> tls
+  tf --> local
+  aws --> vpc
+  aws --> sg
+  aws --> instance
+  aws --> lb
+  instance --> userdata
+  userdata --> kubeconfig
+  kubeconfig --> k8s
+  k8s --> ns
+  k8s --> cm
+  k8s --> dep
+  k8s --> service
 ```
 
-### Kubernetes topology
+### Kubernetes Topology
 
 ```mermaid
 flowchart TB
   subgraph EC2[Single EC2 host]
     subgraph Kind[kind cluster]
-      cp[demo-kind-control-plane<br/>control-plane node]
-      w1[demo-kind-worker<br/>worker node]
-      w2[demo-kind-worker2<br/>worker node]
+      cp[demo-kind-control-plane<br/>control-plane, tainted]
+      w1[demo-kind-worker<br/>worker]
+      w2[demo-kind-worker2<br/>worker]
     end
 
-    app1[demo-app pod 1]
-    app2[demo-app pod 2]
+    p1[demo-app pod 1]
+    p2[demo-app pod 2]
   end
 
-  w1 --> app1
-  w2 --> app2
+  w1 --> p1
+  w2 --> p2
 ```
 
-Expected topology:
+Expected architecture:
 
 - 1 EC2 instance.
 - 1 kind control-plane node.
 - 2 kind worker nodes.
-- 2 app pods spread across the 2 worker nodes.
+- 2 app pods scheduled on worker nodes.
+- Public traffic enters through ALB and reaches pods through NodePort `30080`.
 
-## Evidence Folder Suggestion
+## Evidence Images
 
-Save screenshots locally with this naming pattern:
-
-```text
-evidence/
-  01-terraform-infra-output.png
-  02-kubernetes-nodes.png
-  03-kubernetes-workloads.png
-  04-kubernetes-service.png
-  05-alb-web-page.png
-  06-alb-healthz.png
-  07-target-group-health.png
-  08-terraform-plan-no-changes.png
-```
-
-The `evidence/` folder is optional for local screenshots. Do not commit screenshots unless the assignment asks for them.
-
-## Prerequisites Before Capture
-
-Run from the project directory:
-
-```powershell
-cd E:\Xbrain\tf_learning\cloud\w8\projects\project-01-ec2-kind-alb
-```
-
-Confirm required local files exist:
-
-```powershell
-Test-Path .\generated\kubeconfig
-Test-Path .\terraform\infra\terraform.tfstate
-Test-Path .\terraform\workloads\terraform.tfstate
-```
-
-Expected result:
+All screenshots are stored in:
 
 ```text
-True
-True
-True
+docs/image/
+```
+
+Recommended naming pattern:
+
+```text
+01-terraform-infra-output.png
+02-kubernetes-nodes.png
+03-kubernetes-workloads.png
+04-kubernetes-service.png
+05-alb-web-page.png
+06-alb-healthz.png
+07-target-group-health.png
+08-terraform-plan-no-changes.png
+09-terraform-workloads-output.png
 ```
 
 ## Evidence 01 - Terraform Infra Outputs
@@ -166,7 +148,7 @@ True
 Purpose:
 
 - Prove Terraform created AWS infrastructure.
-- Capture ALB URL, EC2 instance ID, EC2 public IP, Kubernetes API endpoint, and target group ARN.
+- Show ALB URL, EC2 instance, Kubernetes API endpoint, NodePort, and target group ARN.
 
 Command:
 
@@ -174,25 +156,23 @@ Command:
 terraform -chdir=terraform\infra output
 ```
 
-Expected evidence:
+Expected:
 
 - `alb_url` starts with `http://`.
 - `instance_id` starts with `i-`.
 - `kube_api_endpoint` points to `https://<EC2_PUBLIC_IP>:6443`.
-- `node_port` is `30080`.
-- `target_group_arn` is present.
+- `node_port = 30080`.
+- `target_group_arn` exists.
 
-Screenshot:
+Evidence:
 
-```text
-01-terraform-infra-output.png
-```
+![Terraform infra output](docs/image/01-terraform-infra-output.png)
 
 ## Evidence 02 - Kubernetes Nodes
 
 Purpose:
 
-- Prove local machine can control Kubernetes through `generated/kubeconfig`.
+- Prove local machine can access Kubernetes API through kubeconfig.
 - Prove kind cluster has 3 nodes.
 
 Command:
@@ -201,7 +181,7 @@ Command:
 kubectl --kubeconfig .\generated\kubeconfig get nodes -o wide
 ```
 
-Expected evidence:
+Expected:
 
 ```text
 demo-kind-control-plane   Ready
@@ -209,19 +189,17 @@ demo-kind-worker          Ready
 demo-kind-worker2         Ready
 ```
 
-Screenshot:
+Evidence:
 
-```text
-02-kubernetes-nodes.png
-```
+![Kubernetes nodes](docs/image/02-kubernetes-nodes.png)
 
 ## Evidence 03 - Kubernetes Workloads
 
 Purpose:
 
-- Prove Terraform Kubernetes provider created the workload.
-- Prove Deployment is available and pods are running.
-- Prove pods are scheduled on worker nodes.
+- Prove Terraform Kubernetes provider created the app resources.
+- Prove Deployment is available.
+- Prove pods are running on worker nodes.
 
 Command:
 
@@ -229,25 +207,21 @@ Command:
 kubectl --kubeconfig .\generated\kubeconfig get deploy,rs,pod -n demo-local -o wide
 ```
 
-Expected evidence:
+Expected:
 
 - Deployment `demo-app` shows `2/2`.
 - 2 pods are `Running`.
-- Pod `NODE` column shows:
-  - `demo-kind-worker`
-  - `demo-kind-worker2`
+- Pod `NODE` column shows `demo-kind-worker` and `demo-kind-worker2`.
 
-Screenshot:
+Evidence:
 
-```text
-03-kubernetes-workloads.png
-```
+![Kubernetes workloads](docs/image/03-kubernetes-workloads.png)
 
 ## Evidence 04 - Kubernetes Service
 
 Purpose:
 
-- Prove app is exposed through Kubernetes NodePort.
+- Prove the app is exposed through Kubernetes NodePort.
 - Prove NodePort matches ALB target group port.
 
 Command:
@@ -256,52 +230,45 @@ Command:
 kubectl --kubeconfig .\generated\kubeconfig get svc -n demo-local -o wide
 ```
 
-Expected evidence:
+Expected:
 
 ```text
 demo-app   NodePort   ...   80:30080/TCP
 ```
 
-Screenshot:
+Evidence:
 
-```text
-04-kubernetes-service.png
-```
+![Kubernetes service](docs/image/04-kubernetes-service.png)
 
 ## Evidence 05 - Web App Through ALB
 
 Purpose:
 
 - Prove public access through AWS ALB.
-- Prove ALB forwards traffic to EC2 NodePort and Kubernetes Service.
+- Prove traffic reaches Kubernetes workload.
 
 Command:
 
 ```powershell
 $ALB_URL = terraform -chdir=terraform\infra output -raw alb_url
-Write-Host $ALB_URL
 Start-Process $ALB_URL
 ```
 
-Expected evidence:
+Expected:
 
-- Browser opens the demo page.
-- Page displays:
-  - Student name.
-  - Group name.
-  - Cloud Lab / Kubernetes / Terraform pills.
+- Browser opens the web page.
+- Page shows student name, group name, and project labels.
 
-Screenshot:
+Evidence:
 
-```text
-05-alb-web-page.png
-```
+![ALB web page](docs/image/05-alb-web-page.png)
 
-## Evidence 06 - ALB Health Endpoint
+## Evidence 06 - Health Check Endpoint
 
 Purpose:
 
-- Prove `/healthz` works for ALB health checks.
+- Prove `/healthz` responds successfully.
+- Prove ALB health check path is valid.
 
 Command:
 
@@ -310,22 +277,20 @@ $ALB_URL = terraform -chdir=terraform\infra output -raw alb_url
 Invoke-WebRequest "$ALB_URL/healthz"
 ```
 
-Expected evidence:
+Expected:
 
-- HTTP status code is `200`.
-- Response body is `ok`.
+- HTTP status code `200`.
+- Body `ok`.
 
-Screenshot:
+Evidence:
 
-```text
-06-alb-healthz.png
-```
+![ALB healthz](docs/image/06-alb-healthz.png)
 
 ## Evidence 07 - Target Group Health
 
 Purpose:
 
-- Prove ALB target group sees EC2 target as healthy.
+- Prove ALB target group sees the EC2 target as healthy.
 
 Command:
 
@@ -334,24 +299,22 @@ $TG_ARN = terraform -chdir=terraform\infra output -raw target_group_arn
 aws elbv2 describe-target-health --target-group-arn $TG_ARN
 ```
 
-Expected evidence:
+Expected:
 
 ```text
 TargetHealth.State = healthy
 Target.Port = 30080
 ```
 
-Screenshot:
+Evidence:
 
-```text
-07-target-group-health.png
-```
+![Target group health](docs/image/07-target-group-health.png)
 
-## Evidence 08 - Terraform No Changes
+## Evidence 08 - Terraform Plan No Changes
 
 Purpose:
 
-- Prove local Terraform state matches real infrastructure after deployment.
+- Prove Terraform state matches real infrastructure after deployment.
 
 Commands:
 
@@ -365,49 +328,126 @@ terraform -chdir=terraform\workloads plan `
   -var "node_port=30080"
 ```
 
-Expected evidence:
+Expected:
 
 ```text
 No changes. Your infrastructure matches the configuration.
 ```
 
-Screenshot:
+Evidence:
 
-```text
-08-terraform-plan-no-changes.png
-```
+![Terraform plan no changes](docs/image/08-terraform-plan-no-changes.png)
 
-## Evidence 09 - Optional Debug Proof
+## Evidence 09 - Terraform Workloads Outputs
 
-Use this only if you need to explain an issue.
+Purpose:
+
+- Prove the Kubernetes stack exposes useful outputs.
+- Prove Terraform tracks workload resources.
+
+Command:
 
 ```powershell
-kubectl --kubeconfig .\generated\kubeconfig describe deployment demo-app -n demo-local
-kubectl --kubeconfig .\generated\kubeconfig get events -n demo-local --sort-by=.lastTimestamp
+terraform -chdir=terraform\workloads output
 ```
 
-Expected healthy condition:
+Expected:
 
-```text
-Available=True
-Progressing=True
+- `namespace = demo-local`.
+- `deployment_name = demo-app`.
+- `service_name = demo-app`.
+- `node_port = 30080`.
+
+Evidence:
+
+![Terraform workloads output](docs/image/09-terraform-workloads-output.png)
+
+## Evidence 10 - Runs on Another Machine
+
+Purpose:
+
+- Prove the project is reproducible from source.
+- Prove generated runtime files are not required from Git.
+- Prove macOS/Linux can use `.sh` scripts instead of PowerShell.
+
+Important note:
+
+- This lab uses local Terraform state.
+- A second machine should deploy a fresh stack with a unique `project_name`, or destroy the existing stack first.
+- Do not try to manage an already deployed stack from another machine without the matching state file.
+
+Steps on another macOS/Linux machine:
+
+```bash
+git clone https://github.com/G-03-XBrain-Phase-2/hoangson-aws-accelerator-p2.git
+cd hoangson-aws-accelerator-p2/cloud/w8/projects/project-01-ec2-kind-alb
 ```
 
-## Final Evidence Checklist
+Create local tfvars:
+
+```bash
+cp terraform/infra/terraform.tfvars.example terraform/infra/terraform.tfvars
+cp terraform/workloads/terraform.tfvars.example terraform/workloads/terraform.tfvars
+```
+
+Get current public IP:
+
+```bash
+echo "$(curl -s https://checkip.amazonaws.com | tr -d '\n')/32"
+```
+
+Edit `terraform/infra/terraform.tfvars`:
+
+```hcl
+project_name = "demo-kind-alb-mac"
+admin_cidr  = "YOUR_PUBLIC_IP/32"
+```
+
+Deploy:
+
+```bash
+chmod +x scripts/deploy.sh scripts/destroy.sh
+./scripts/deploy.sh
+```
+
+Verify:
+
+```bash
+kubectl --kubeconfig generated/kubeconfig get nodes -o wide
+kubectl --kubeconfig generated/kubeconfig get pods -n demo-local -o wide
+terraform -chdir=terraform/infra output -raw alb_url
+```
+
+Destroy after proof:
+
+```bash
+./scripts/destroy.sh
+```
+
+Evidence acceptance criteria:
+
+- Fresh clone does not contain `generated/`, `terraform.tfstate`, or `terraform.tfvars`.
+- `deploy.sh` creates infra and workloads from source.
+- `kubectl get nodes` shows 3 Ready nodes.
+- `kubectl get pods` shows 2 Running pods.
+- ALB URL opens the web app.
+
+## Final Checklist
 
 Before submitting, confirm:
 
-- `terraform/infra` created AWS infrastructure.
+- `terraform/infra` created AWS resources.
 - `terraform/workloads` created Kubernetes resources.
 - 3 kind nodes are `Ready`.
 - 2 app pods are `Running`.
-- Pods run on worker nodes, not on control-plane.
+- Pods run on worker nodes.
 - Service type is `NodePort`.
 - NodePort is `30080`.
 - ALB URL opens the web page.
 - `/healthz` returns `200`.
 - Target group health is `healthy`.
 - Terraform plan returns no changes.
+- Another machine can reproduce the deployment from source using `.sh` scripts.
 
 ## Common Issues
 
@@ -415,12 +455,12 @@ Before submitting, confirm:
 
 Cause:
 
-- Too many replicas for available schedulable worker nodes.
-- Control-plane node has taint and should not run app pods.
+- Rolling update creates an extra pod while strict topology spread is enabled.
 
 Fix:
 
-- Keep `replicas = 2` for this 1 master + 2 worker lab.
+- Deployment uses `max_surge = 0` and `max_unavailable = 1`.
+- Keep `replicas = 2` for the 2 worker node topology.
 
 ### Local kubectl cannot connect
 
