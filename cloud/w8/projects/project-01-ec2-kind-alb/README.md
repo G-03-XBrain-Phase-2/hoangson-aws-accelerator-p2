@@ -94,8 +94,16 @@ Copy-Item terraform\workloads\terraform.tfvars.example terraform\workloads\terra
 
 Sua `terraform/infra/terraform.tfvars`:
 
+Lay public IP hien tai cua may local:
+
+```powershell
+"$((Invoke-RestMethod https://checkip.amazonaws.com).Trim())/32"
+```
+
+Copy ket qua vao `admin_cidr`, vi du:
+
 ```hcl
-admin_cidr = "YOUR_PUBLIC_IP/32"
+admin_cidr = "203.0.113.10/32"
 ```
 
 Deploy:
