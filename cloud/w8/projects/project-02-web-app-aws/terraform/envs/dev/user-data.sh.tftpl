@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+exec > >(tee -a /var/log/demo-web-bootstrap.log) 2>&1
+
+dnf install -y nginx
+systemctl enable --now nginx
+
+cat > /usr/share/nginx/html/index.html <<HTML
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${project_name} ${environment}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #152033;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+    main {
+      width: min(860px, 100%);
+      background: #ffffff;
+      border: 1px solid #dbe3ef;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 18px 48px rgba(31, 44, 71, 0.10);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #2563eb;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0;
+      color: #526173;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    dl {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 32px 0 0;
+    }
+    div.metric {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px;
+      background: #fbfdff;
+    }
+    dt {
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    dd {
+      margin: 0;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">AWS Terraform Project</p>
+    <h1>Deploy a Web App on AWS</h1>
+    <p>This page is served by Nginx on EC2. The database is private in RDS MySQL, and static assets are stored in a private S3 bucket.</p>
+    <dl>
+      <div class="metric">
+        <dt>Project</dt>
+        <dd>${project_name}</dd>
+      </div>
+      <div class="metric">
+        <dt>Environment</dt>
+        <dd>${environment}</dd>
+      </div>
+      <div class="metric">
+        <dt>RDS endpoint</dt>
+        <dd>${db_endpoint}</dd>
+      </div>
+      <div class="metric">
+        <dt>S3 assets bucket</dt>
+        <dd>${assets_bucket_name}</dd>
+      </div>
+    </dl>
+  </main>
+</body>
+</html>
+HTML
+
+cat > /usr/share/nginx/html/healthz <<'EOF'
+ok
+EOF

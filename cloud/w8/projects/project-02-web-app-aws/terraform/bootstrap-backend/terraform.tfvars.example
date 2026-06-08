@@ -1,0 +1,7 @@
+aws_region        = "ap-southeast-1"
+project_name      = "demo-web-app"
+owner             = "nguyen-hoang-son"
+state_bucket_name = "demo-web-app-tfstate-change-me"
+
+# Optional. If null, Terraform uses "<project_name>-tf-locks".
+lock_table_name = null
