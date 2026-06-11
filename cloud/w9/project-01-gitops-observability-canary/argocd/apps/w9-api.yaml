@@ -1,18 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: demo-web-rollouts
+  name: w9-api
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
     repoURL: https://github.com/G-03-XBrain-Phase-2/hoangson-aws-accelerator-p2.git
     targetRevision: main
-    path: cloud/w9/project-01-gitops-observability-canary/rollouts
+    path: cloud/w9/project-01-gitops-observability-canary/apps/w9-api/overlays/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: demo-web
+    namespace: demo
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

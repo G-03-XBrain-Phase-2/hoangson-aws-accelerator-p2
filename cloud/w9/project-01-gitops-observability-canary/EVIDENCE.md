@@ -1,46 +1,80 @@
-# W9 Evidence Template
+# W9 Evidence
 
-Save screenshots under `docs/image/`.
+Save screenshots under `docs/image/`. Capture both command output and UI proof where possible.
 
-## Evidence Checklist By Phase
+## Architecture Evidence
 
-| No. | Evidence | Expected proof |
-| --- | --- | --- |
-| P0-01 | Cluster readiness | `kubectl get nodes` shows node `Ready` |
-| P0-02 | ArgoCD installed | ArgoCD pods are running |
-| P1-01 | Kustomize render | `kubectl kustomize` renders app successfully |
-| P1-02 | Kubectl dry-run | `kubectl apply --dry-run=client -k ...` passes |
-| P1-03 | Optional app smoke test | Pods, Service, and `/healthz` work |
-| P2-01 | ArgoCD app list | Apps are `Synced` and `Healthy` |
-| P2-02 | GitOps app health | `demo-web` is deployed by ArgoCD |
-| P2-03 | Self-heal | Manual replica drift is restored from Git |
-| P3-01 | GitHub Actions PR check | Manifest validation passes |
-| P4-01 | Prometheus targets | App/collector targets are up |
-| P4-02 | Grafana dashboard | Availability and latency panels exist |
-| P4-03 | Burn rate alert rule | Prometheus alert rule exists |
-| P5-01 | Argo Rollout canary | Rollout steps are visible |
-| P5-02 | Canary analysis | AnalysisTemplate queries Prometheus |
-| P5-03 | Abort evidence | Bad metric can abort rollout |
+```mermaid
+flowchart LR
+  GitHub[GitHub Repository] --> ArgoCD[ArgoCD App-of-Apps]
+  ArgoCD --> Addons[Argo Rollouts + Prometheus Stack]
+  ArgoCD --> API[w9-api Web App Rollout]
+  API --> UI[Frontend /]
+  API --> BE[Backend /api/status]
+  API --> SVC[ClusterIP Service]
+  SVC --> Prometheus[Prometheus ServiceMonitor]
+  Prometheus --> Grafana[Grafana Dashboard]
+  Prometheus --> Analysis[Argo Rollouts AnalysisTemplate]
+  Analysis --> Rollout[Canary promote or abort]
+```
 
-## Commands
+## Required Screenshots
+
+| No. | Screenshot | Command or UI | Expected proof |
+| --- | --- | --- | --- |
+| 01 | Cluster ready | `kubectl get nodes -o wide` | Node is `Ready` |
+| 02 | ArgoCD installed | `kubectl get pods -n argocd` | ArgoCD pods are running |
+| 03 | App-of-apps | `kubectl get applications -n argocd` | `w9-api`, `argo-rollouts`, and `kube-prometheus-stack` exist |
+| 04 | App health | ArgoCD UI | Apps are `Synced` and `Healthy` |
+| 05 | Workload ready | `kubectl get pods,svc -n demo` | `w9-api` pods and service are ready |
+| 06 | Rollout state | `kubectl argo rollouts get rollout w9-api -n demo` | Canary steps are visible |
+| 07 | Frontend and backend | Port-forward service, then open `/` and `/api/status` | UI loads and API returns JSON |
+| 08 | Metrics endpoint | Port-forward service, then open `/metrics` | Flask metrics are exposed |
+| 09 | Prometheus discovery | Prometheus UI targets | `w9-api` target is up |
+| 10 | SLO rule | `kubectl get prometheusrule -n demo` | `w9-api-slo` exists |
+| 11 | Canary analysis | `kubectl get analysistemplate -n demo` | `w9-api-success-rate` exists |
+| 12 | CI guardrail | GitHub Actions PR page | Manifest check passes or blocks bad change |
+
+## Useful Commands
 
 ```powershell
-kubectl get nodes
-kubectl get ns
-kubectl kustomize apps/demo-web/overlays/dev
-kubectl apply --dry-run=client -k apps/demo-web/overlays/dev
-kubectl get pods -A
+kubectl get nodes -o wide
 kubectl get applications -n argocd
-kubectl get pods -n demo-web
-kubectl get rollout -A
-kubectl get analysistemplate -A
+kubectl get pods,svc -n demo
+kubectl get rollout -n demo
+kubectl get analysistemplate,prometheusrule,servicemonitor -n demo
+kubectl port-forward svc/w9-api -n demo 8080:80
+```
+
+Open in browser:
+
+```text
+http://localhost:8080/
+http://localhost:8080/api/status
+http://localhost:8080/metrics
+```
+
+Grafana access:
+
+```powershell
+kubectl port-forward svc/kube-prometheus-stack-grafana -n observability 3000:80
+```
+
+Default learning credential in this project:
+
+```text
+username: admin
+password: admin
 ```
 
 ## Final Checklist
 
-- [ ] ArgoCD owns app deployment.
-- [ ] CI validates manifests.
-- [ ] Observability stack is installed.
-- [ ] SLO or burn rate rule exists.
-- [ ] Canary rollout is configured.
-- [ ] Evidence screenshots are saved.
+- [ ] ArgoCD owns active workload deployment.
+- [ ] App-of-apps installs add-ons and app from Git.
+- [ ] Frontend page and backend API both work.
+- [ ] App exposes health, readiness, and Prometheus metrics.
+- [ ] Prometheus discovers the app through ServiceMonitor.
+- [ ] PrometheusRule defines an SLO/error-rate alert.
+- [ ] Argo Rollouts canary is configured with AnalysisTemplate.
+- [ ] CI validates the renderable manifests.
+- [ ] Evidence screenshots are saved in `docs/image/`.

@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: w9-api
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: w9-api
+    app.kubernetes.io/part-of: w9-gitops-observability-canary
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: w9-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

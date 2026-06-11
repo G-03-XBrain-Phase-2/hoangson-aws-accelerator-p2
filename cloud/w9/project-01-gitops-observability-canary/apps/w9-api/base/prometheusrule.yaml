@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: w9-api-slo
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: w9-api
+    app.kubernetes.io/part-of: w9-gitops-observability-canary
+spec:
+  groups:
+    - name: w9-api.slo
+      rules:
+        - alert: W9ApiHighErrorRate
+          expr: |
+            (
+              sum(rate(flask_http_request_total{namespace="demo",status=~"5.."}[5m]))
+              /
+              sum(rate(flask_http_request_total{namespace="demo"}[5m]))
+            ) > 0.02
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: W9 API error rate is higher than the 98% success SLO
+            description: More than 2% of requests returned 5xx during the last 5 minutes.

@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: w9-api-success-rate
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: w9-api
+    app.kubernetes.io/part-of: w9-gitops-observability-canary
+spec:
+  metrics:
+    - name: success-rate
+      interval: 1m
+      count: 3
+      successCondition: result[0] >= 0.98
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
+          query: |
+            (
+              sum(rate(flask_http_request_total{namespace="demo",status!~"5.."}[2m]))
+              /
+              sum(rate(flask_http_request_total{namespace="demo"}[2m]))
+            ) or vector(1)

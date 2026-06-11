@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_name }} | W9 GitOps Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">W9 Final Project</p>
+          <h1>GitOps Web App</h1>
+          <p class="subtitle">
+            Frontend and backend served from one lightweight Flask container, deployed by ArgoCD,
+            observed by Prometheus, and released with Argo Rollouts.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="/api/status">Backend API</a>
+            <a class="button secondary" href="/metrics">Prometheus Metrics</a>
+          </div>
+        </div>
+
+        <div class="status-panel" aria-label="Application status">
+          <div class="panel-header">
+            <span class="pulse"></span>
+            <span>Live Status</span>
+          </div>
+          <dl class="status-grid">
+            <div>
+              <dt>Frontend</dt>
+              <dd id="frontend-status">Checking</dd>
+            </div>
+            <div>
+              <dt>Backend</dt>
+              <dd id="backend-status">Checking</dd>
+            </div>
+            <div>
+              <dt>Version</dt>
+              <dd id="app-version">{{ app_version }}</dd>
+            </div>
+            <div>
+              <dt>Rollout</dt>
+              <dd>Canary Ready</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="cards" aria-label="Architecture summary">
+        <article>
+          <span class="card-index">01</span>
+          <h2>Frontend</h2>
+          <p>Static HTML, CSS, and JavaScript render the user interface and call the backend API.</p>
+        </article>
+        <article>
+          <span class="card-index">02</span>
+          <h2>Backend</h2>
+          <p>Flask exposes `/api/status`, health checks, readiness checks, and Prometheus metrics.</p>
+        </article>
+        <article>
+          <span class="card-index">03</span>
+          <h2>GitOps</h2>
+          <p>ArgoCD syncs the desired state from Git and Argo Rollouts controls progressive delivery.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

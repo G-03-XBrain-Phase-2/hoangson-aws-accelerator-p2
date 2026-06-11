@@ -1,20 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: observability
+  name: argo-rollouts
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   source:
-    repoURL: https://github.com/G-03-XBrain-Phase-2/hoangson-aws-accelerator-p2.git
-    targetRevision: main
-    path: cloud/w9/project-01-gitops-observability-canary/observability/prometheus/rules
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-rollouts
+    targetRevision: 2.41.0
+    helm:
+      releaseName: argo-rollouts
   destination:
     server: https://kubernetes.default.svc
-    namespace: observability
+    namespace: argo-rollouts
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
