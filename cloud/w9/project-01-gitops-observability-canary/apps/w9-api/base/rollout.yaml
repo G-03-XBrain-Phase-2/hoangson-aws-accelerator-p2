@@ -53,7 +53,7 @@ spec:
             - name: APP_NAME
               value: w9-api
             - name: APP_VERSION
-              value: v2
+              value: v3
             - name: FAIL_RATE
               value: "0"
           readinessProbe:

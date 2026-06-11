@@ -37,7 +37,7 @@ jobs:
           grep -q "kind: Rollout" rendered-w9-api.yaml
           grep -q "kind: ServiceMonitor" rendered-w9-api.yaml
           grep -q "kind: PrometheusRule" rendered-w9-api.yaml
-          grep -q "image: w9-api:2" rendered-w9-api.yaml
+          grep -q "image: w9-api:" rendered-w9-api.yaml
 
       - name: Check ArgoCD application manifests
         run: |

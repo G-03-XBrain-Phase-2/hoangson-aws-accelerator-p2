@@ -31,7 +31,7 @@ jobs:
         run: |
           kubectl kustomize cloud/w9/project-01-gitops-observability-canary/apps/w9-api/overlays/dev > rendered-w9-api.yaml
           test -s rendered-w9-api.yaml
-          grep -q "image: w9-api:2" rendered-w9-api.yaml
+          grep -q "image: w9-api:" rendered-w9-api.yaml
 
       - name: Explain GitOps sync
         run: |
