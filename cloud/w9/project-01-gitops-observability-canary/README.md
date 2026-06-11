@@ -181,6 +181,8 @@ Use `EVIDENCE.md` for the exact screenshot and clip checklist. Required proof:
 - SLO alert firing and email received after injecting errors.
 - Bad canary `AnalysisRun` failed and rollout auto-aborted to the old good version.
 
+For a command-by-command demo flow, use `DEMO-TEST-RUNBOOK.md`.
+
 ## Destroy Local Lab
 
 ```powershell
