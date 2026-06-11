@@ -1,0 +1,33 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: w9-api-email-alerts
+  namespace: demo
+  labels:
+    app.kubernetes.io/name: w9-api
+    app.kubernetes.io/part-of: w9-gitops-observability-canary
+spec:
+  route:
+    receiver: personal-email
+    groupBy:
+      - alertname
+      - namespace
+    groupWait: 10s
+    groupInterval: 1m
+    repeatInterval: 30m
+    matchers:
+      - name: alertname
+        value: W9ApiHighErrorRate
+        matchType: =
+  receivers:
+    - name: personal-email
+      emailConfigs:
+        - to: CHANGE_ME_PERSONAL_EMAIL@example.com
+          from: CHANGE_ME_SENDER_EMAIL@example.com
+          smarthost: smtp.gmail.com:587
+          authUsername: CHANGE_ME_SENDER_EMAIL@example.com
+          authPassword:
+            name: alertmanager-smtp-auth
+            key: password
+          requireTLS: true
+          sendResolved: true

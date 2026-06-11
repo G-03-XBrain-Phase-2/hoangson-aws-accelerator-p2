@@ -35,8 +35,10 @@ jobs:
       - name: Check expected final resources
         run: |
           grep -q "kind: Rollout" rendered-w9-api.yaml
+          grep -q "kind: AnalysisTemplate" rendered-w9-api.yaml
           grep -q "kind: ServiceMonitor" rendered-w9-api.yaml
           grep -q "kind: PrometheusRule" rendered-w9-api.yaml
+          grep -q "kind: AlertmanagerConfig" rendered-w9-api.yaml
           grep -q "image: w9-api:" rendered-w9-api.yaml
 
       - name: Check ArgoCD application manifests

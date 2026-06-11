@@ -8,3 +8,4 @@ resources:
   - rollout.yaml
   - servicemonitor.yaml
   - prometheusrule.yaml
+  - alertmanagerconfig.yaml

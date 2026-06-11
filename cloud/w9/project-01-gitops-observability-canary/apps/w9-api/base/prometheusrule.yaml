@@ -10,16 +10,20 @@ spec:
   groups:
     - name: w9-api.slo
       rules:
-        - alert: W9ApiHighErrorRate
+        - record: w9_api:slo_success_rate:2m
           expr: |
             (
-              sum(rate(flask_http_request_total{namespace="demo",status=~"5.."}[5m]))
+              sum(rate(flask_http_request_total{namespace="demo",status!~"5.."}[2m]))
               /
-              sum(rate(flask_http_request_total{namespace="demo"}[5m]))
-            ) > 0.02
-          for: 5m
+              sum(rate(flask_http_request_total{namespace="demo"}[2m]))
+            ) or vector(1)
+        - alert: W9ApiHighErrorRate
+          expr: |
+            w9_api:slo_success_rate:2m < 0.98
+          for: 1m
           labels:
             severity: warning
+            slo: success-rate-98
           annotations:
             summary: W9 API error rate is higher than the 98% success SLO
-            description: More than 2% of requests returned 5xx during the last 5 minutes.
+            description: Success rate stayed below 98% for more than 1 minute.
