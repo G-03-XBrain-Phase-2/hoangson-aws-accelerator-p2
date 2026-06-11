@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-web-slo-burn-rate
+  namespace: observability
+spec:
+  groups:
+    - name: demo-web.slo
+      rules:
+        - alert: DemoWebHighErrorBurnRate
+          expr: |
+            (
+              sum(rate(http_requests_total{app="demo-web",status=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{app="demo-web"}[5m]))
+            ) > 0.02
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Demo web error burn rate is high
+            description: Replace this query with the real app metric after instrumentation.

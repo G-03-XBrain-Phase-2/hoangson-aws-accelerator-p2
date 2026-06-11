@@ -1,0 +1,17 @@
+name: w9-apply-on-merge
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "cloud/w9/project-01-gitops-observability-canary/**"
+
+jobs:
+  notify-gitops:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain GitOps sync
+        run: |
+          echo "ArgoCD should pull from Git after merge."
+          echo "This workflow does not run kubectl apply directly."

@@ -1,0 +1,25 @@
+name: w9-plan-on-pr
+
+on:
+  pull_request:
+    paths:
+      - "cloud/w9/project-01-gitops-observability-canary/**"
+
+jobs:
+  validate-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Render demo app manifests
+        run: |
+          kubectl kustomize cloud/w9/project-01-gitops-observability-canary/apps/demo-web/overlays/dev
+
+      - name: Validate YAML shape
+        run: |
+          kubectl kustomize cloud/w9/project-01-gitops-observability-canary/apps/demo-web/overlays/dev > rendered.yaml
+          test -s rendered.yaml
