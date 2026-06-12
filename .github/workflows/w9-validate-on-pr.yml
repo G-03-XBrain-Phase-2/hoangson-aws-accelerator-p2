@@ -20,13 +20,13 @@ jobs:
 
       - name: Check frontend and backend source
         run: |
-          # 1. Ép máy ảo cài đặt các thư viện thiếu trước
+          # 1. Install missing Python libraries before py_compile.
           pip install flask prometheus-flask-exporter
-          
-          # 2. Chạy lệnh check py_compile thuần túy (không cần cờ)
+
+          # 2. Run py_compile without extra flags.
           python -m py_compile cloud/w9/project-01-gitops-observability-canary/app/app.py
-          
-          # 3. Chạy các lệnh kiểm tra file khác bên dưới giữ nguyên
+
+          # 3. Check required frontend/backend files and routes.
           test -s cloud/w9/project-01-gitops-observability-canary/app/templates/index.html
           test -s cloud/w9/project-01-gitops-observability-canary/app/static/app.js
           test -s cloud/w9/project-01-gitops-observability-canary/app/static/styles.css
