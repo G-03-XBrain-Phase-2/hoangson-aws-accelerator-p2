@@ -20,6 +20,8 @@ jobs:
 
       - name: Check frontend and backend source
         run: |
+          set -euxo pipefail
+
           # 1. Install missing Python libraries before py_compile.
           pip install flask prometheus-flask-exporter
 
@@ -31,7 +33,8 @@ jobs:
           test -s cloud/w9/project-01-gitops-observability-canary/app/static/app.js
           test -s cloud/w9/project-01-gitops-observability-canary/app/static/styles.css
           grep -q "/api/status" cloud/w9/project-01-gitops-observability-canary/app/app.py
-          grep -q "/metrics" cloud/w9/project-01-gitops-observability-canary/app/app.py
+          grep -q "PrometheusMetrics(app)" cloud/w9/project-01-gitops-observability-canary/app/app.py
+          grep -q "/metrics" cloud/w9/project-01-gitops-observability-canary/app/templates/index.html
 
       - name: Render final app manifests
         run: |
