@@ -1,0 +1,26 @@
+aws_region      = "ap-southeast-1"
+cluster_name    = "w10-secure-platform"
+cluster_version = "1.30"
+
+vpc_cidr                = "10.40.0.0/16"
+availability_zone_count = 2
+
+# Lab default. For stricter security, replace with your public IP /32.
+cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+node_instance_types = ["t3.medium"]
+node_min_size       = 1
+node_desired_size   = 2
+node_max_size       = 3
+
+external_secrets_role_name = "w10-external-secrets"
+external_secrets_allowed_secret_arns = [
+  "arn:aws:secretsmanager:ap-southeast-1:419022576090:secret:prod/db/password-*",
+  "arn:aws:secretsmanager:ap-southeast-1:419022576090:secret:prod/alertmanager/smtp-password-*"
+]
+
+tags = {
+  Project   = "w10-secure-operate-platform"
+  ManagedBy = "terraform"
+  Owner     = "phase2-cloud"
+}
