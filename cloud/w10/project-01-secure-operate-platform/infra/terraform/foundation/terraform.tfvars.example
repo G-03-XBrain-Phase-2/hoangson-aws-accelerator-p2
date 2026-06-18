@@ -1,0 +1,8 @@
+aws_region          = "ap-southeast-1"
+ecr_repository_name = "w10-api"
+github_org          = "G-03-XBrain-Phase-2"
+github_repo         = "hoangson-aws-accelerator-p2"
+github_branch       = "main"
+
+# Set to false if token.actions.githubusercontent.com already exists in this AWS account.
+create_github_oidc_provider = true

@@ -1,0 +1,11 @@
+# Terraform local working data and state must not be committed.
+infra/terraform/**/.terraform/
+infra/terraform/**/terraform.tfvars
+infra/terraform/**/*.tfstate
+infra/terraform/**/*.tfstate.*
+infra/terraform/**/.terraform.tfstate.lock.info
+infra/terraform/**/crash.log
+infra/terraform/**/crash.*.log
+
+# Keep provider lock files committed for reproducible Terraform installs.
+!infra/terraform/**/.terraform.lock.hcl
