@@ -1,0 +1,42 @@
+name: validate
+
+on:
+  pull_request:
+    paths:
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/app-api/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/app-analysis/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/app-alert/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/app-common/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/argocd/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/rbac/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/gatekeeper/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/k8s-eso/**'
+      - 'cloud/w10/project-02-secure-operate-gitops-lab/image-policy/**'
+      - '.github/workflows/w10-validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_DIR: cloud/w10/project-02-secure-operate-gitops-lab
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sSLo kc.tgz https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf kc.tgz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate manifests
+        run: |
+          kubeconform -strict -summary -ignore-missing-schemas \
+            ${PROJECT_DIR}/app-api/ \
+            ${PROJECT_DIR}/app-analysis/ \
+            ${PROJECT_DIR}/app-alert/ \
+            ${PROJECT_DIR}/app-common/ \
+            ${PROJECT_DIR}/argocd/ \
+            ${PROJECT_DIR}/rbac/ \
+            ${PROJECT_DIR}/gatekeeper/ \
+            ${PROJECT_DIR}/k8s-eso/ \
+            ${PROJECT_DIR}/image-policy/
