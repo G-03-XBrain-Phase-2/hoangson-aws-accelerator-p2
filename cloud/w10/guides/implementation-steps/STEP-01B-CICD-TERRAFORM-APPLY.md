@@ -37,17 +37,19 @@ Template workflow đã có trong project:
 cloud/w10/project-01-secure-operate-platform/ci/github-actions/terraform-foundation.yml
 ```
 
+Workflow chạy thật ở root repo:
+
+```text
+.github/workflows/w10-terraform-foundation.yml
+```
+
 Lưu ý quan trọng:
 
 ```text
 GitHub chỉ tự chạy workflow nếu file nằm ở .github/workflows/ tại root repo.
 ```
 
-Vì vậy file trong project là bản template/source. Khi muốn chạy thật, copy nó ra:
-
-```text
-.github/workflows/w10-terraform-foundation.yml
-```
+Vì vậy project giữ một bản template/source để dễ quản lý theo W10, còn root workflow là bản GitHub Actions chạy thật.
 
 ---
 
@@ -97,26 +99,12 @@ Local apply chỉ là bootstrap exception. Sau bootstrap, Terraform changes đi 
 
 ---
 
-## 4. Copy workflow template ra root
+## 4. Kiểm tra workflow root
 
 Đứng ở root repo:
 
 ```powershell
 Set-Location E:\Xbrain\tf_learning
-```
-
-Tạo folder workflow nếu chưa có:
-
-```powershell
-New-Item -ItemType Directory -Force .github\workflows | Out-Null
-```
-
-Copy workflow:
-
-```powershell
-Copy-Item `
-  cloud/w10/project-01-secure-operate-platform/ci/github-actions/terraform-foundation.yml `
-  .github/workflows/w10-terraform-foundation.yml
 ```
 
 Kiểm tra:
@@ -425,4 +413,3 @@ Kết luận ngắn:
 ```text
 CI/CD Terraform apply là cầu nối giữa IaC và AWS foundation. Nó không phải GitOps/ArgoCD, vì ArgoCD chưa tồn tại ở bước này. GitOps bắt đầu quản lý Kubernetes resources sau khi EKS và ArgoCD đã được bootstrap.
 ```
-
