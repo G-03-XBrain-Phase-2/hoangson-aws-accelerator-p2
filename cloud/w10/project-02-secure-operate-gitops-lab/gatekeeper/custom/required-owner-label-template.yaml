@@ -1,0 +1,19 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredownerlabel
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredOwnerLabel
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredownerlabel
+
+        violation[{"msg": msg}] {
+          required := input.parameters.labels[_]
+          not input.review.object.metadata.labels[required]
+          msg := sprintf("resource must include required label <%v>", [required])
+        }

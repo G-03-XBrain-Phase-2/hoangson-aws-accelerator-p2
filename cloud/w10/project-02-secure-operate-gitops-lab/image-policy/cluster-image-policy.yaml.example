@@ -1,0 +1,19 @@
+﻿apiVersion: policy.sigstore.dev/v1beta1
+kind: ClusterImagePolicy
+metadata:
+  name: require-signed-w10-api
+  labels:
+    owner: platform-team
+    env: w10
+spec:
+  images:
+    - glob: "ghcr.io/g-03-xbrain-phase-2/w10-api*"
+  authorities:
+    - key:
+        data: |
+          -----BEGIN PUBLIC KEY-----
+          REPLACE_WITH_COSIGN_PUBLIC_KEY
+          -----END PUBLIC KEY-----
+
+
+

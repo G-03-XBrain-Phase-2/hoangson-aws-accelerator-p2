@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-alerts
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus-stack
+    release: kube-prometheus-stack
+    owner: platform-team
+    env: w10
+spec:
+  groups:
+    - name: slo
+      interval: 30s
+      rules:
+        - record: api:success_rate:5m
+          expr: |
+            sum(rate(flask_http_request_duration_seconds_count{namespace="demo",app="api",status!~"5.."}[5m]))
+            /
+            sum(rate(flask_http_request_duration_seconds_count{namespace="demo",app="api"}[5m]))
+
+        - alert: SLOViolation
+          expr: api:success_rate:5m < 0.95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "API SLO Violation"
+            description: "Success rate {{ $value | humanizePercentage }} is below the 95% SLO."

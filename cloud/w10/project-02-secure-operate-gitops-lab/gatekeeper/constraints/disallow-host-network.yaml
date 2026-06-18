@@ -1,0 +1,19 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sDisallowHostNetwork
+metadata:
+  name: disallow-host-network
+spec:
+  enforcementAction: deny
+  match:
+    namespaceSelector:
+      matchLabels:
+        admission.gatekeeper.sh/enforce: "true"
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+      - apiGroups: ["batch"]
+        kinds: ["Job", "CronJob"]
+      - apiGroups: ["argoproj.io"]
+        kinds: ["Rollout"]

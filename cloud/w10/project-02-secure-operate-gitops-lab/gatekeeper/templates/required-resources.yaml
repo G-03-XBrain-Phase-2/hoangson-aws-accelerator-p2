@@ -1,0 +1,52 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredresources
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredResources
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredresources
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not container.resources.limits.cpu
+          msg := sprintf("container <%v> must set resources.limits.cpu", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not container.resources.limits.memory
+          msg := sprintf("container <%v> must set resources.limits.memory", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not container.resources.requests.cpu
+          msg := sprintf("container <%v> must set resources.requests.cpu", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          not container.resources.requests.memory
+          msg := sprintf("container <%v> must set resources.requests.memory", [container.name])
+        }
+
+        input_containers[c] {
+          podspec := input.review.object.spec
+          c := podspec.containers[_]
+        }
+
+        input_containers[c] {
+          podspec := input.review.object.spec.template.spec
+          c := podspec.containers[_]
+        }
+
+        input_containers[c] {
+          podspec := input.review.object.spec.jobTemplate.spec.template.spec
+          c := podspec.containers[_]
+        }

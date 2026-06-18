@@ -1,0 +1,48 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sdisallowrootuser
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sDisallowRootUser
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sdisallowrootuser
+
+        violation[{"msg": msg}] {
+          podspec := input_podspecs[_]
+          podspec.securityContext.runAsUser == 0
+          msg := "pod securityContext must not set runAsUser: 0"
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          container.securityContext.runAsUser == 0
+          msg := sprintf("container <%v> must not set runAsUser: 0", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input_containers[_]
+          container.securityContext.privileged == true
+          msg := sprintf("container <%v> must not run privileged", [container.name])
+        }
+
+        input_podspecs[p] {
+          p := input.review.object.spec
+        }
+
+        input_podspecs[p] {
+          p := input.review.object.spec.template.spec
+        }
+
+        input_podspecs[p] {
+          p := input.review.object.spec.jobTemplate.spec.template.spec
+        }
+
+        input_containers[c] {
+          podspec := input_podspecs[_]
+          c := podspec.containers[_]
+        }

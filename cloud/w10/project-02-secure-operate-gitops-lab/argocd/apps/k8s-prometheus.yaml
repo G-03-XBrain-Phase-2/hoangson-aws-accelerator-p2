@@ -1,0 +1,63 @@
+﻿# ArgoCD App: Prometheus, Alertmanager and Grafana stack.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 65.1.1
+    helm:
+      values: |
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+
+        alertmanager:
+          config:
+            global:
+              resolve_timeout: 5m
+            route:
+              group_by: ['alertname', 'severity']
+              group_wait: 10s
+              group_interval: 5m
+              repeat_interval: 12h
+              receiver: 'email-notifications'
+              routes:
+              - receiver: 'null'
+                matchers:
+                - alertname = "Watchdog"
+            receivers:
+            - name: 'null'
+            - name: 'email-notifications'
+              email_configs:
+              - to: 'nguyenhoangson.13032004@gmail.com'
+                from: 'nguyenhoangson.13032004@gmail.com'
+                smarthost: 'smtp.gmail.com:587'
+                auth_username: 'nguyenhoangson.13032004@gmail.com'
+                auth_password_file: /etc/alertmanager/secrets/alertmanager-email/password
+                require_tls: true
+                headers:
+                  Subject: '[W10 Demo Alert] {{ .GroupLabels.alertname }} - {{ .GroupLabels.severity }}'
+
+          alertmanagerSpec:
+            secrets:
+            - alertmanager-email
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+
+

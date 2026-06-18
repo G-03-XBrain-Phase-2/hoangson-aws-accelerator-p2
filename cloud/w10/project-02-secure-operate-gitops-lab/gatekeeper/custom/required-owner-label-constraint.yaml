@@ -1,0 +1,30 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredOwnerLabel
+metadata:
+  name: required-owner-env-labels
+spec:
+  enforcementAction: deny
+  match:
+    namespaceSelector:
+      matchLabels:
+        admission.gatekeeper.sh/enforce: "true"
+    excludedNamespaces:
+      - kube-system
+      - gatekeeper-system
+      - argocd
+      - monitoring
+      - external-secrets
+      - cosign-system
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "Service", "Namespace"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+      - apiGroups: ["argoproj.io"]
+        kinds: ["Rollout", "AnalysisTemplate"]
+      - apiGroups: ["monitoring.coreos.com"]
+        kinds: ["ServiceMonitor", "PrometheusRule"]
+  parameters:
+    labels:
+      - owner
+      - env

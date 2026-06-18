@@ -1,0 +1,26 @@
+﻿# ArgoCD App: RBAC roles and bindings for W10 demo users.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rbac
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/G-03-XBrain-Phase-2/hoangson-aws-accelerator-p2.git
+    path: cloud/w10/project-02-secure-operate-gitops-lab/rbac
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+
+
+

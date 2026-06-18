@@ -1,0 +1,26 @@
+﻿# ArgoCD App: API Rollout, Service and ServiceMonitor.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/G-03-XBrain-Phase-2/hoangson-aws-accelerator-p2.git
+    path: cloud/w10/project-02-secure-operate-gitops-lab/app-api
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+
+
+
